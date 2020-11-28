@@ -1,0 +1,46 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - '3306:3306'
+    volumes:
+      - db-data:/var/lib/mysql
+
+  rails:
+    build:
+      context: .
+      dockerfile: ./docker/rails/Dockerfile
+    volumes:
+      - .:/commitcamp
+      - bundle-data:/usr/local/bundle
+      - tmp-data:/commitcamp/tmp
+      - log-data:/commitcamp/log
+    command: bundle exec puma -C config/puma.rb
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    stdin_open: true
+    tty: true
+
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    volumes:
+      - public-data:/commitcamp/public
+      - tmp-data:/commitcamp/tmp
+    ports:
+      - 80:80
+    depends_on:
+      - rails
+
+volumes:
+  db-data:
+  public-data:
+  tmp-data:
+  log-data:
+  bundle-data:
